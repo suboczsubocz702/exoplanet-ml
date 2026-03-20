@@ -194,6 +194,11 @@ These help monitor training progress and convergence.
 -   Dataset contains missing values handled in preprocessing
 -   Classification threshold (default 0.6) affects precision/recall
     balance
+------------------------------------------------------------------------
+## Loss and Accuracy functions 
+
+<img width="640" height="480" alt="Figure_2" src="https://github.com/user-attachments/assets/99c521de-3fdf-455d-8742-e331f88a09a6" />
+<img width="640" height="480" alt="Figure_1" src="https://github.com/user-attachments/assets/29847369-d563-4485-a25c-3ebbae684b42" />
 
 ------------------------------------------------------------------------
 
