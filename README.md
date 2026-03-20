@@ -201,18 +201,3 @@ These help monitor training progress and convergence.
 <img width="640" height="480" alt="Figure_1" src="https://github.com/user-attachments/assets/29847369-d563-4485-a25c-3ebbae684b42" />
 
 ------------------------------------------------------------------------
-
-## Future Improvements
-
--   ROC curve and threshold optimization
--   Hyperparameter tuning
--   Faster tree implementation
--   UI improvements
--   Batch prediction from CSV
--   Docker deployment
-
-------------------------------------------------------------------------
-
-## Author
-
-Machine learning project focused on astrophysics and model deployment.
