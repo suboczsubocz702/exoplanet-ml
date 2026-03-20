@@ -4,7 +4,11 @@ A machine learning project for detecting exoplanets using data from the
 Kepler Space Telescope.
 
 ------------------------------------------------------------------------
+# Availability
 
+The model is available for all the plaforms (Windows, Linux, MacOS), mainly to integrate it with websites or personal projects
+
+------------------------------------------------------------------------
 ## Overview
 
 This project builds a binary classification model that predicts whether
