@@ -30,7 +30,7 @@ async function predict() {
         impact: parseFloat(document.getElementById("impact").value)
     };
 
-    const response = await fetch("https://YOUR-API.onrender.com/predict", {
+    const response = await fetch("https://exoplanet-ml.onrender.com/predict", {
         method: "POST",
         headers: {
             "Content-Type": "application/json"
