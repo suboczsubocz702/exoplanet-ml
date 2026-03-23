@@ -1,109 +1,77 @@
-# Exoplanet Classifier (Kepler ML Project)
+# Exoplanet Classifier – Kepler ML Project
 
-A machine learning project for detecting exoplanets using data from the
-Kepler Space Telescope.
-
-------------------------------------------------------------------------
-# Availability
-
-The model is available for all the plaforms (Windows, Linux, MacOS), mainly to integrate it with websites or personal projects
-
-------------------------------------------------------------------------
-## Overview
-
-This project builds a binary classification model that predicts whether
-a detected signal corresponds to a real exoplanet or a false positive.
-
-The model is implemented from scratch using NumPy and is based on
-Gradient Boosting.
-
-------------------------------------------------------------------------
-
-## Features
-
--   Gradient Boosting implemented from scratch
--   Custom Decision Tree Regressor
--   Log-loss optimization for classification
--   Feature engineering based on domain knowledge
--   REST API using FastAPI
--   Frontend deployed on Netlify
--   Real-time prediction via browser
--   Training visualization (loss and accuracy)
-
-------------------------------------------------------------------------
+A binary classification model for detecting exoplanets from Kepler Space Telescope transit data. The model is implemented from scratch using NumPy with a custom Gradient Boosting algorithm.
 
 ## Model Performance
 
-  Metric      Value
-  ----------- --------
-  Accuracy    \~0.90
-  Precision   \~0.88
-  Recall      \~0.79
-  F1 Score    \~0.83
-
-------------------------------------------------------------------------
+| Metric | Value |
+|--------|-------|
+| Accuracy | 0.90 |
+| Precision | 0.88 |
+| Recall | 0.79 |
+| F1 Score | 0.83 |
 
 ## Project Structure
 
-    exoplanet_ml/
-    │
-    ├── data/
-    │   └── kepler_clean.csv
-    │
-    ├── src/
-    │   ├── data_loader.py
-    │   ├── preprocessing.py
-    │   ├── decision_tree.py
-    │   ├── gradient_boosting.py
-    │   └── metrics.py
-    │
-    ├── train.py
-    ├── api.py
-    ├── model.pkl
-    ├── index.html
-    └── README.md
-
-------------------------------------------------------------------------
+```
+exoplanet_ml/
+├── data/
+│   └── kepler_clean.csv          # Training data
+├── src/
+│   ├── data_loader.py            # Data loading utilities
+│   ├── preprocessing.py          # Feature engineering
+│   ├── decision_tree.py          # Custom decision tree regressor
+│   ├── gradient_boosting.py      # Gradient Boosting implementation
+│   └── metrics.py                # Evaluation metrics
+├──website/
+|   ├── index.html                # Website structure
+│   ├── script.js                 # Website functions
+│   └── style.css                 # Webiste stylng
+├── train.py                      # Training script
+├── api.py                        # FastAPI endpoint
+├── model.pkl                     # Serialized model
+├── requirements.txt
+└── README.md
+```
 
 ## Installation
 
-``` bash
+```bash
 pip install numpy pandas matplotlib fastapi uvicorn
 ```
 
-------------------------------------------------------------------------
+## Training
 
-## Training the Model
-
-``` bash
+```bash
 python train.py
 ```
 
-This will:
+This loads and preprocesses the Kepler data, trains the Gradient Boosting model, displays metrics, plots training curves, and saves `model.pkl`.
 
--   Load and preprocess data
--   Train the Gradient Boosting model
--   Display metrics
--   Plot training curves
--   Save model to `model.pkl`
+## Feature Engineering
 
-------------------------------------------------------------------------
+Additional features derived from base parameters to improve performance:
 
-## API (FastAPI)
+- `depth / duration`
+- `snr / period`
+- `depth * duration`
+- `prad / period`
+- `duration / period`
+- `log(snr)`
+- `log(depth)`
 
-Run the API:
+## API
 
-``` bash
+Run the FastAPI server:
+
+```bash
 uvicorn api:app --reload
 ```
 
-Endpoint:
+**Endpoint:** `POST /predict`
 
-POST /predict
-
-Example request:
-
-``` json
+**Request:**
+```json
 {
   "snr": 10,
   "depth": 500,
@@ -114,90 +82,30 @@ Example request:
 }
 ```
 
-Example response:
-
-``` json
+**Response:**
+```json
 {
-  "probability": 0.87,
-  "prediction": 1
+  "probability": 0.225,
+  "prediction": False Positive
 }
 ```
 
-------------------------------------------------------------------------
-
-## Frontend
-
-The frontend is a simple HTML interface deployed on Netlify.
-
-It allows users to:
-
--   Input transit parameters
--   Use predefined examples
--   Get predictions from the model
-
-------------------------------------------------------------------------
-
-## Feature Engineering
-
-Additional features are created from base parameters:
-
--   depth / duration
--   snr / period
--   depth \* duration
--   prad / period
--   duration / period
--   log(snr)
--   log(depth)
-
-These improve model performance by capturing relationships between
-variables.
-
-------------------------------------------------------------------------
-
-## How It Works
-
-1.  Input astrophysical parameters
-2.  Apply feature engineering
-3.  Pass data to Gradient Boosting model
-4.  Output probability and classification
-
-------------------------------------------------------------------------
-
-## Architecture
-
-Frontend (Netlify) ↓ FastAPI (Render) ↓ ML Model (NumPy)
-
-------------------------------------------------------------------------
-
-## Training Visualization
-
-The model tracks:
-
--   Log-loss over iterations
--   Accuracy over iterations
-
-These help monitor training progress and convergence.
-
-------------------------------------------------------------------------
-
 ## Deployment
 
--   Frontend: Netlify
--   Backend: Render
--   Model: serialized using pickle
+- **Backend:** Render
+- **Frontend:** Netlify
 
-------------------------------------------------------------------------
+## How Input Parameters Affect Output
 
-## Notes
+| Parameter | Increase → Effect | Decrease → Effect |
+|-----------|-------------------|-------------------|
+| **SNR** | Higher probability (stronger signal) | Lower probability (weak detection) |
+| **Depth** | Higher probability (larger planet) | Lower probability (signal too small) |
+| **Duration** | Higher for 2–8 hrs; decreases for very long transits | Lower for very short transits (<1 hr) |
+| **prad** | Higher for 0.5–3; decreases for extreme values | Lower if too small (<0.5) |
+| **Period** | Short periods (<10 days) favor planets; long periods (>200 days) lower probability | Very short periods (<1 day) decrease probability |
+| **Impact** | Lower probability if >0.8 (grazing transits) | Higher probability if <0.4 (central transits) |
 
--   Feature engineering must be identical in training and API
--   Dataset contains missing values handled in preprocessing
--   Classification threshold (default 0.6) affects precision/recall
-    balance
-------------------------------------------------------------------------
-## Loss and Accuracy functions 
-
-<img width="640" height="480" alt="Figure_2" src="https://github.com/user-attachments/assets/99c521de-3fdf-455d-8742-e331f88a09a6" />
-<img width="640" height="480" alt="Figure_1" src="https://github.com/user-attachments/assets/29847369-d563-4485-a25c-3ebbae684b42" />
-
-------------------------------------------------------------------------
+**Examples:**
+- Hot Jupiter (SNR 28.5, depth 1280, period 3.5) -> Probability >0.60 (exoplanet)
+- Kepler-22b (SNR 15.2, depth 520, period 289) -> Probability ~0.43 (false positive)
