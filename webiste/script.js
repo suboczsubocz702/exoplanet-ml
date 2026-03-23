@@ -144,7 +144,7 @@ async function getPrediction(data) {
     
     try {
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 8000);
+        const timeoutId = setTimeout(() => controller.abort(), 30000);
         
         const response = await fetch(API_URL, {
             method: 'POST',
