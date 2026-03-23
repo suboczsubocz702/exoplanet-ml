@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>exoplanet-ml | Gradient Boosting Exoplanet Classifier</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js" id="MathJax-script" async></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+</head>
+<body>
+    <div class="mesh-bg"></div>
+    <nav class="glass-nav">
+        <div class="nav-container">
+            <div class="logo">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M2 17L12 22L22 17" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M2 12L12 17L22 12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                <span>exoplanet-ml</span>
+            </div>
+            <div class="nav-links">
+                <button class="nav-btn active" data-tab="tab-model" > Mathematical Framework</button>
+                <button class="nav-btn" data-tab="tab-exoplanets" > Exoplanet Physics</button>
+                <button class="nav-btn" data-tab="tab-demo"> Live Inference</button>
+            </div>
+        </div>
+    </nav>
+
+    <main class="content">
+        <section id="tab-model" class="tab-pane active">
+            <div class="card scientific-card">
+                <h1 class="card-title">Gradient Boosting for Exoplanet Classification</h1>
+                <div class="academic-meta">
+                    <span>Loss Function: Binary Cross-Entropy (Log Loss)</span>
+                    <span>Base Learner: Custom Decision Tree Regressor</span>
+                    <span>Accuracy: 0.90 +- 0.02</span>
+                </div>
+
+                <div class="scientific-content">
+                    <h2>1. Problem Formulation</h2>
+                    <p>Let \( \mathcal{D} = \{(\mathbf{x}_i, y_i)\}_{i=1}^N \) denote the dataset where \( \mathbf{x}_i \in \mathbb{R}^m \) represents astrophysical parameters (SNR, depth, duration, prad, period, impact) and engineered features, and \( y_i \in \{0,1\} \) indicates whether the signal corresponds to a true exoplanet (\(y_i=1\)) or a false positive (\(y_i=0\)).</p>
+                    <p>The goal is to learn a function \( F: \mathbb{R}^m \rightarrow [0,1] \) that minimizes the expected log-loss:</p>
+                    <div class="math-block">
+                        \[
+                        \mathcal{L}(F) = -\frac{1}{N}\sum_{i=1}^N \left[ y_i \log(F(\mathbf{x}_i)) + (1-y_i)\log(1-F(\mathbf{x}_i)) \right]
+                        \]
+                    </div>
+                    <h2>2. Gradient Boosting Algorithm</h2>
+                    <p>Gradient Boosting builds an additive model in a stage-wise fashion:</p>
+                    <div class="math-block">
+                         \[
+                        F_M(\mathbf{x}) = F_0(\mathbf{x}) + \sum_{m=1}^M \eta \cdot h_m(\mathbf{x})
+                        \]
+                    </div>
+                    <p>where \( F_0(\mathbf{x}) = \log\left(\frac{\bar{y}}{1-\bar{y}}\right) \) is the initial prediction (log-odds of the prior), \( \eta \) is the learning rate, and \( h_m \) is a weak learner (decision tree) fitted to the negative gradient of the loss function.</p>
+                    <h3>2.1 Gradient Computation</h3>
+                    <p>At iteration \( m \), for each sample \( i \), the pseudo-residuals are:</p>
+                    <div class = "math-block">
+                        \[
+                        r_{i,m} = -\left[ \frac{\partial \mathcal{L}(y_i, F(\mathbf{x}_i))}{\partial F(\mathbf{x}_i)} \right]_{F=F_{m-1}} = y_i - \frac{1}{1+e^{-F_{m-1}(\mathbf{x}_i)}}
+                        \]
+                    </div>
+                    <p>These residuals represent the error between the true label and the predicted probability from the previous model.</p>
+                    <h3>2.2 Decision Tree Regressor</h3>
+                    <p>Each weak learner \( h_m \) is a regression tree that partitions the feature space into \( J \) terminal regions \( \{R_{j,m}\}_{j=1}^J \). For each region, the optimal update is computed by solving:</p>
+                    <div class="math-block">
+                        \[
+                        \gamma_{j,m} = \underset{\gamma}{\text{argmin}} \sum_{\mathbf{x}_i \in R_{j,m}} \mathcal{L}\left(y_i, F_{m-1}(\mathbf{x}_i) + \gamma\right)
+                        \]
+                    </div>
+                    <p>For log-loss, this reduces to a Newton-Raphson approximation:</p>
+                    <div class="math-block">
+                        \[
+                        \gamma_{j,m} = \frac{\sum_{\mathbf{x}_i \in R_{j,m}} r_{i,m}}{\sum_{\mathbf{x}_i \in R_{j,m}} p_{i,m-1}(1-p_{i,m-1})}
+                        \]
+                    </div>
+                    <p>where \( p_{i,m-1} = \sigma(F_{m-1}(\mathbf{x}_i)) \) is the predicted probability.</p>
+                    
+                    <h2>3. Feature Engineering</h2>
+                    <p>Domain knowledge from astrophysics guides the construction of interaction features:</p>
+                    <div class="math-grid">
+                        <div class="math-item">\( f_7 = \frac{\text{depth}}{\text{duration}} \)</div>
+                        <div class="math-item">\( f_8 = \frac{\text{SNR}}{\text{period}} \)</div>
+                        <div class="math-item">\( f_9 = \text{depth} \times \text{duration} \)</div>
+                        <div class="math-item">\( f_{10} = \frac{\text{prad}}{\text{period}} \)</div>
+                        <div class="math-item">\( f_{11} = \frac{\text{duration}}{\text{period}} \)</div>
+                        <div class="math-item">\( f_{12} = \log(\text{SNR}) \)</div>
+                        <div class="math-item">\( f_{13} = \log(\text{depth}) \)</div>
+                    </div>
+                    <p>These transformations capture physical relationships such as the impact parameter scaling and signal-to-noise dependence on orbital geometry.</p>
+                    <h2>4. Training Dynamics</h2>
+                    <p>The model optimizes log-loss over \( M = 300 \) boosting iterations with learning rate \( \eta = 0.5 \). REgularization is achieved via tree depth constraints (max depth = 3) and sybsampling (feature bagging). The convergence is monitored through validation loss to prevent overfitting</p>
+                    <h2>5. Model Performance Metrics</h2>
+                    <div class="metrics-grid">
+                        <div class="metric-item"><span>Accuracy</span><strong>0.90</strong></div>
+                        <div class="metric-item"><span>Precision</span><strong>0.88</strong></div>
+                        <div class="metric-item"><span>Recall</span><strong>0.79</strong></div>
+                        <div class="metric-item"><span>F₁ Score</span><strong>0.83</strong></div>
+                        <div class="metric-item"><span>AUC-ROC</span><strong>0.92</strong></div>
+                        <div class="metric-item"><span>Log Loss</span><strong>0.34</strong></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="tab-exoplanets" class="tab-pane">
+            <div class="card scientific-card">
+                <h1 class="card-title">Exoplanet Detection: The Transit Method</h1>
+                <div class="scientific-content">
+                    <h2>1. Physical Principles of Transit Photometry</h2>
+                    <p>When an exoplanet crosses (transits) the disk of its host star, it causes a periodic decrease in stellar flux. The fractional flux change \( \delta \) is directly related to the planet-to-star radius ratio:</p>
+                    <div class="math-block">
+                        \[
+                        \delta = \frac{\Delta F}{F} = \left(\frac{R_p}{R_*}\right)^2
+                        \]
+                    </div>
+                    <p>where \( R_p \) is the planetary radius and \( R_* \) is the stellar radius. This forms the fundamental basis for radius determination.</p>
+                    
+                    <h2>2. Transit Geometry and Parameters</h2>
+                    <p>The observed transit light curve encodes several key physical parameters:</p>
+                    
+                    <h3>2.1 Impact Parameter</h3>
+                    <div class="math-block">
+                        \[
+                        b = \frac{a \cos i}{R_*} = \frac{d}{R_*}
+                        \]
+                    </div>
+                    <p>where \( a \) is the orbital semi-major axis, \( i \) is the orbital inclination, and \( d \) is the projected distance from the star's center. For \( b > 1 \), no transit occurs.</p>
+                    
+                    <h3>2.2 Transit Duration</h3>
+                    <p>The total transit duration from first to fourth contact is:</p>
+                    <div class="math-block">
+                        \[
+                        T_{\text{total}} = \frac{P}{\pi} \arcsin\left(\frac{R_*}{a}\sqrt{1-b^2}\right) \approx \frac{P}{\pi}\frac{R_*}{a}\sqrt{1-b^2}
+                        \]
+                    </div>
+                    <p>where \( P \) is the orbital period. For a central transit (\( b=0 \)), this simplifies to \( T \approx \frac{P}{\pi}\frac{R_*}{a} \).</p>
+                    
+                    <h3>2.3 Signal-to-Noise Ratio (SNR)</h3>
+                    <p>The SNR of a transit detection depends on the depth \( \delta \), the number of observed transits \( n \), and the photometric precision \( \sigma \):</p>
+                    <div class="math-block">
+                        \[
+                        \text{SNR} = \frac{\delta \sqrt{n}}{\sigma} = \left(\frac{R_p}{R_*}\right)^2 \frac{\sqrt{n}}{\sigma}
+                        \]
+                    </div>
+                    
+                    <h2>3. Kepler Mission Data</h2>
+                    <p>The Kepler Space Telescope monitored ~150,000 stars with 30-minute cadence, achieving photometric precision of ~20 ppm for bright stars. The data reduction pipeline produces the following observables used in our model:</p>
+                    <ul>
+                        <li><strong>SNR</strong>: Combined signal significance across multiple transits</li>
+                        <li><strong>Depth (\( \delta \))</strong>: Primary flux decrement in parts per million (ppm)</li>
+                        <li><strong>Duration (\( T_{\text{total}} \))</strong>: Transit length in hours</li>
+                        <li><strong>Planet-to-star radius ratio (\( R_p/R_* \))</strong>: Derived from depth</li>
+                        <li><strong>Orbital period (\( P \))</strong>: Time between successive transits</li>
+                        <li><strong>Impact parameter (\( b \))</strong>: Inferred from light curve shape</li>
+                    </ul>
+                    
+                    <h2>4. False Positive Scenarios</h2>
+                    <p>Approximately 90% of Kepler candidates are false positives arising from:</p>
+                    <ul>
+                        <li><strong>Eclipsing Binaries (EBs)</strong>: Grazing or background eclipsing binaries mimicking planetary transits</li>
+                        <li><strong>Stellar Variability</strong>: Pulsations, starspots, or activity cycles</li>
+                        <li><strong>Instrumental Artifacts</strong>: Data systematics and CCD anomalies</li>
+                        <li><strong>Hierarchical Triples</strong>: Diluted eclipses from multiple star systems</li>
+                    </ul>
+                    <p>Our classifier leverages the distinctive signatures in parameter space—for instance, EBs often show V-shaped transit profiles (high impact parameter) and depth variations that differ from planetary transits.</p>
+                    
+                    <h2>5. Feature Importance from Physics</h2>
+                    <p>The engineered features are grounded in physical scaling relations:</p>
+                    <ul>
+                        <li><strong>depth/duration</strong>: Approximates the ingress/egress slope, sensitive to limb darkening and impact parameter</li>
+                        <li><strong>SNR/period</strong>: Balances detection significance against orbital architecture</li>
+                        <li><strong>depth x duration</strong>: Correlates with the total integrated signal, proportional to \( R_p^2 / (a \sqrt{1-b^2}) \)</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <section id="tab-demo" class="tab-pane">
+            <div class="demo-grid">
+                <div class="card input-card">
+                    <h2 class="card-title">Transit Parameter Input</h2>
+                    <div class="input-group">
+                        <label>SNR(Signal-to-Noise Ration)</label>
+                        <input type="number" id="snr" step="0.1" value="12.5">
+                    </div>
+                    <div class="input-group">
+                        <label>Depth [ppm]</label>
+                        <input type="number" id="depth" step="10" value="450">    
+                    </div>
+                    <div class="input-group">
+                        <label>Duration [hours]</label>
+                        <input type="number" id="duration" step="0.5" value="4.2">
+                    </div>
+                    <div class="input-group">
+                        <label>Planet-to-Star Radius Ratio (prad)</label>
+                        <input type="number" id="prad" step="0.1" value="1.2">
+                    </div>
+                    <div class="input-group">
+                        <label>Orbital Period [days]</label>
+                        <input type="number" id="period" step="1" value="55">
+                    </div>
+                    <div class="input-group">
+                        <label>Impact Parameter (b)</label>
+                        <input type="number" id="impact" step="0.05" value="0.35">
+                    </div>
+
+                <div class="examples">
+                    <p>Example Candidates:</p>
+                    <button class="example-btn" data-example="kepler-22b">Kepler-22b (Confirmed)</button>
+                    <button class="example-btn" data-example="false-positive">False Positive (EB)</button>
+                    <button class="example-btn" data-example="hot-jupiter">Hot Jupiter (HD 209458b)</button>
+                    <button class="example-btn" data-example="super-earth">Super Earth (Kepler-186f)</button>            
+                </div>
+                <button id="predictBtn" class="predict-btn">Classify Transit Signal</button>
+                <div id="reuslArea" class="result-area">
+                
+                </div>
+
+                <div class="card chart-card">
+                    <h2 class="card-title">Transit Light Curve</h2>
+                    <canvas id="transitCurve" width="400" height="300" style="width: 100%; height: auto; max-height: 320px;"></canvas>
+                    <p class="chart-caption">Simpulated flux drop based on depth and duration parameters. The shape assumes an uniform stellar disk</p>
+                    <div class="physics-note">
+                        <small> \( \delta = (R_r/R_*)^2 \) | Duration ∝ \( P^{1/3} R_*^{2/3} \sqrt{1-b^2} \)</small>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+    <script src="script.js"></script>
+</body>
+</html>
